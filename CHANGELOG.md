@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.3.3 (Dec 26, 2018)
+
+* Reverted adding vue as external, which caused problems loading umd.
+
+## 2.3.2 (Dec 13, 2018)
+
+* Added vue as externals webpack config to fix startup problems (thanks [Micene9](https://github.com/Micene09))
+
 ## 2.3.1 (Nov 6, 2018)
 
 * Previous fix for touch dragging on Android broke dragging on other mobile browsers (thanks [onx2](https://github.com/onx2))

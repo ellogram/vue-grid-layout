@@ -289,7 +289,7 @@ export default {
 
         compact(this.layout, this.verticalCompact);
         this.eventBus.$emit("updateWidth", this.width);
-
+        // this.updateHeight();
         this.flexRowHeight();
       }
     },
@@ -314,7 +314,6 @@ export default {
       this.updateHeight();
     },
     updateHeight: function() {
-      console.log("__" + this.containerHeight());
       this.mergedStyle = {
         height: this.containerHeight()
       };
@@ -327,7 +326,7 @@ export default {
       ) {
         this.width = this.$refs.item.offsetWidth;
       }
-      console.log("windowresize");
+      // console.log("windowresize");
       this.height = window.innerHeight;
       this.eventBus.$emit("resizeEvent");
     },
@@ -340,10 +339,17 @@ export default {
       );
     },
     dragEvent: function(eventName, id, x, y, h, w) {
+      //console.log(eventName + " id=" + id + ", x=" + x + ", y=" + y);
+      let l = getLayoutItem(this.layout, id);
+      //GetLayoutItem sometimes returns null object
+      if (l === undefined || l === null) {
+        l = { x: 0, y: 0 };
+      }
+
       if (eventName === "dragmove" || eventName === "dragstart") {
         this.placeholder.i = id;
-        this.placeholder.x = x;
-        this.placeholder.y = y;
+        this.placeholder.x = l.x;
+        this.placeholder.y = l.y;
         this.placeholder.w = w;
         this.placeholder.h = h;
         this.$nextTick(function() {
@@ -356,12 +362,8 @@ export default {
           this.isDragging = false;
         });
       }
-      //console.log(eventName + " id=" + id + ", x=" + x + ", y=" + y);
-      let l = getLayoutItem(this.layout, id);
-      //GetLayoutItem sometimes returns null object
-      if (l === undefined || l === null) {
-        l = { x: 0, y: 0 };
-      }
+
+      // set layout element coordinates to dragged position
       l.x = x;
       l.y = y;
       // Move the element to the dragged location.
@@ -402,26 +404,24 @@ export default {
       l.h = h;
       l.w = w;
 
-      if (this.responsive) {
-        this.responsiveGridLayout();
-      } else {
-        compact(this.layout, this.verticalCompact);
-        this.eventBus.$emit("compact");
+      if (this.responsive) this.responsiveGridLayout();
 
-        this.updateHeight();
-      }
+      compact(this.layout, this.verticalCompact);
+      this.eventBus.$emit("compact");
+      this.updateHeight();
 
       if (eventName === "resizeend") this.$emit("layout-updated", this.layout);
     },
 
     // finds or generates new layouts for set breakpoints
     responsiveGridLayout() {
+
       let newBreakpoint = getBreakpointFromWidth(this.breakpoints, this.width);
       let newCols = getColsFromBreakpoint(newBreakpoint, this.cols);
 
-      //  console.info(this.originalLayout);
+      // console.info(this.originalLayout);
+      // console.info(newBreakpoint);
 
-      console.info(newBreakpoint);
       // save actual layout in layouts
       if (this.lastBreakpoint != null && !this.layouts[this.lastBreakpoint])
         this.layouts[this.lastBreakpoint] = cloneLayout(this.layout);
@@ -438,12 +438,12 @@ export default {
       );
 
       this.$emit("responsive-update", newBreakpoint, layout);
+
       // Store the new layout.
       this.layouts[newBreakpoint] = layout;
       this.computeFlexRowCount(layout);
 
       // new prop sync
-
       this.$emit("update:layout", layout);
 
       this.lastBreakpoint = newBreakpoint;
@@ -468,14 +468,12 @@ export default {
           return obj.i === obj2.i;
         });
       });
-
       //Find values that are in result2 but not in result1
       let uniqueResultTwo = originalLayout.filter(function(obj) {
         return !layout.some(function(obj2) {
           return obj.i === obj2.i;
         });
       });
-
       //Combine the two arrays of unique entries#
       return uniqueResultOne.concat(uniqueResultTwo);
     }
